@@ -14,16 +14,16 @@
 (def button-selector "._2lkdt")
 (def new-message-selector ".OUeyt")
 
-(defn chrome-opts [sm?]
-  (let [path (str "/tmp/whomst_profile" (when-not sm? "_np"))
+(defn chrome-opts [i]
+  (let [path (str "/tmp/whomst_profile" (when i (str "_" i)))
         opt (str "user-data-dir=" path)]
     (doto (DesiredCapabilities.)
       (.setCapability ChromeOptions/CAPABILITY 
                       (doto (ChromeOptions.)
                         (.addArguments (into-array String [opt])))))))
 
-(defn init-driver [sm?]
-  (ChromeDriver. (chrome-opts sm?)))
+(defn init-driver [i]
+  (ChromeDriver. (chrome-opts i)))
 
 (defn elements [driver s]
   (.findElements
@@ -74,19 +74,29 @@
 
 (defn first-unread-text [driver]
   (when-let [elem (first-unread driver)]
-    (.click elem)
+    (try
+      (.click elem)
+      (catch Exception e
+        (println "exception in new message")
+        (.click elem)))
     (current-message driver)))
-
-(defn dfa [driver on-message]
-  (future
-    (let [last-message (atom nil)]
-      (while true
-        (let [text (first-unread-text driver)]
-          (if (or (not text) (= text @last-message))
-            (Thread/sleep 250)
-            (on-message (reset! last-message text))))))))
 
 (defn find-user [driver n]
   (first 
     (filter #(= n (text %))
             (elements driver user-selector))))
+
+(defn send-message-to-user [d user msg lock]
+  (try
+    (.lock lock)
+    (when-let [np (find-user d user)]
+      (.click np)
+      (send-string (element d input-selector) msg)
+      (.click (element d button-selector)))
+    (finally 
+      (.unlock lock))))
+
+(defn current-user-id [driver]
+  (text 
+    (last 
+      (elements driver user-selector))))

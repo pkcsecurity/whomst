@@ -1,17 +1,21 @@
 (ns whomst.core
-  (:import [org.openqa.selenium.remote DesiredCapabilities]
-           [org.openqa.selenium.chrome ChromeOptions ChromeDriver]
-           [org.openqa.selenium.remote RemoteWebDriver]
-           [org.openqa.selenium By Keys JavascriptExecutor])
-  (:require [whomst.sm :as sm]
-            [whomst.np :as np]
-            [whomst.constants :as c]))
+  (:require [whomst.public :as pub]
+            [whomst.private :as priv]
+            [whomst.constants :as c]
+            [whomst.router :as r]))
+
+(def drivers (atom []))
+
+(def max-privates 2)
 
 (defn -main [& args]
-  (sm/init)
-  (np/init))
+  (swap! drivers conj (pub/init))
+  (dotimes [i max-privates]
+    (swap! drivers conj (priv/init i))))
 
-(defn kill []
-  (c/kill @sm/driver)
-  (c/kill @np/driver)
-  (System/exit 0))
+(defn reset []
+  (doseq [d @drivers]
+    (c/kill d))
+  (reset! drivers [])
+  (reset! r/privates [])
+  (reset! r/public nil))
