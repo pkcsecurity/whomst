@@ -9,6 +9,7 @@
 (def max-privates 2)
 
 (defn -main [& args]
+  (r/flush-all)
   (swap! drivers conj (pub/init))
   (dotimes [i max-privates]
     (swap! drivers conj (priv/init i))))

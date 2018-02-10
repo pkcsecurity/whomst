@@ -5,5 +5,7 @@
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :dependencies [[org.clojure/clojure "LATEST"]
                  [webica "LATEST"]
-                 [org.clojure/core.async "0.4.474"]]
+                 [org.clojure/core.async "0.4.474"]
+                 [clj-http "3.7.0"]
+                 [cheshire "LATEST"]]
   :main whomst.core)
